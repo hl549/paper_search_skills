@@ -1,0 +1,23 @@
+{
+  "_说明": "profiles: 每个检索任务一个 slug。criteria 决定 LLM 评分标准；prefilter 是关键词粗筛。",
+  "_评分标准写法": "rubric_hint 写成对立分档效果最好，例如：'9-10分：直接研究<核心对象>的<核心机制>；≤4分：仅在背景/综述中提到<核心对象>。'",
+  "profiles": {
+    "my_topic": {
+      "journals": [
+        "0029-5493",
+        "0141-0296"
+      ],
+      "arxiv_cats": ["physics.flu-dyn"],
+      "prefilter": {
+        "keywords": ["bubble", "electrolysis"],
+        "apply_to": ["journals"]
+      },
+      "criteria": {
+        "topic": "<你的研究主题一句话，中文即可>",
+        "subfields": ["子方向1", "子方向2"],
+        "notes": "判断以 title+abstract 语义为准，不要依赖期刊/分类标签。",
+        "rubric_hint": "9-10分：…；≤4分：…"
+      }
+    }
+  }
+}

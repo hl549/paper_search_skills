@@ -1,0 +1,7 @@
+{
+  "filter": {
+    "batch_size": 15,
+    "keep_threshold": 6,
+    "timeout_s": 300
+  }
+}
