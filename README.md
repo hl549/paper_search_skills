@@ -20,7 +20,7 @@ export PAPER_LLM_MODEL=<你的模型名>
 
 # 云端（如 DeepSeek）
 export PAPER_LLM_BASE=https://api.deepseek.com/v1
-export PAPER_LLM_MODEL=deepseek-chat
+export PAPER_LLM_MODEL=deepseek-flash
 export PAPER_LLM_API_KEY=sk-xxxx
 ```
 
