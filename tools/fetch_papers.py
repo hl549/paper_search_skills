@@ -3,7 +3,7 @@
 
 Outputs unified candidate list (title+abstract+meta), deduped, excluding
 already-pushed IDs. No API keys required.
-Usage: python3 fetch_papers.py [--days 3] [--out candidates.json]
+Usage: python3 tools/fetch_papers.py [--days 3] [--out data/candidates.json]
 """
 import argparse, json, os, re, sys, time, urllib.request, urllib.parse
 from datetime import date, timedelta
@@ -31,8 +31,8 @@ def load_profile(name):
     """Load a named profile from profiles.json (cumulative, user-editable).
 
     A profile may override: journals {name:[issn...]}, arxiv_cats [...],
-    prefilter {keywords:[...]} — coarse keyword gate applied to high-volume
-    journals only; semantic judgment is always left to the LLM filter.
+    prefilter {keywords:[...], apply_to:[...]} — coarse keyword gate applied
+    to journals by default; semantic judgment is left to the LLM filter.
     """
     if not name:
         return {"journals": JOURNALS, "arxiv_cats": ARXIV_CATS, "prefilter": None}
@@ -50,8 +50,8 @@ def load_profile(name):
 def apply_prefilter(cands, prefilter):
     """Coarse keyword gate: drops clearly off-topic items BEFORE the LLM.
 
-    Only applied to sources named in 'apply_to' (default: all non-arXiv).
-    arXiv category picks are already narrow and small — never gated."""
+    Only applied to sources named in 'apply_to' (default: journals).
+    Include 'arxiv' in 'apply_to' to gate arXiv candidates as well."""
     if not prefilter or not prefilter.get("keywords"):
         return cands, 0
     kws = [k.lower() for k in prefilter["keywords"]]
@@ -219,7 +219,7 @@ def main():
     except Exception as ex:
         errors.append(f"OpenAlex: {ex}")
 
-    # coarse keyword gate (high-volume journals only) before the semantic filter
+    # Coarse keyword gate for configured sources before the semantic filter.
     if prefilter:
         cands, dropped = apply_prefilter(cands, prefilter)
         print(f"[prefilter] dropped {dropped} off-keyword items", file=sys.stderr)

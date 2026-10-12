@@ -5,15 +5,15 @@ Finds related target literature through citation relationships:
   - cites direction : "who cited this paper" (forward snowball, recent work)
   - refs  direction : "what this paper references" (backward snowball),
                       and recursively depth>1 = "papers citing/being-cited-by
-                      the chain" e.g. 引用引用文献的文献
+                      the chain", e.g. papers citing a referenced paper
 
-Output is in the SAME candidate schema as fetch_papers.py (+via path fields),
-so it plugs straight into filter_papers.py / make_digest.py:
+The flat output uses the SAME candidate schema as fetch_papers.py (+via path
+fields), so it plugs straight into filter_papers.py:
 
-  python3 cite_graph.py --seed 10.1017/jfm.2026.11893 --depth 2 \
-      --directions cites,refs --since-year 2021 --out cite_candidates.json
-  python3 filter_papers.py --candidates cite_candidates.json \
-      --out cite_filtered.json --profile <topic>
+  python3 tools/cite_graph.py --seed <DOI> --depth 2 \
+      --directions cites,refs --since-year 2021 --out data/cite_candidates.json
+  python3 tools/filter_papers.py --candidates data/cite_candidates_flat.json \
+      --out data/cite_filtered.json --profile <topic>
 
 Verified API facts (2026-08):
   - detail /works/{WID}         -> full record incl. abstract_inverted_index,
@@ -237,7 +237,7 @@ def main():
             print("frontier empty -> stop")
             break
 
-    # drop seeds from output? keep them flagged with depth 0 (useful context) but mark
+    # Exclude seeds from candidates; retain them separately at depth 0 for context.
     out = [c for c in found.values() if c["depth"] > 0]
     payload = {
         "seeds": [found[w] for w in seeds],

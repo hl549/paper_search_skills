@@ -2,7 +2,7 @@
 """Merge candidate JSON files (cite_graph flat / fetch_papers outputs) by paper id.
 
 Usage:
-  python3 merge_candidates.py --in a.json b.json c.json --out combined.json [--tags tag1,tag2]
+  python3 tools/merge_candidates.py --in a.json b.json --out data/combined.json [--tags tag1,tag2]
 Each input is either a list of papers or {"papers": [...]}. Papers lacking 'id' get one from DOI/URL.
 Tags are added to each paper's 'source_tags' for downstream audit (which list it came from).
 """
@@ -51,7 +51,7 @@ def main():
             if pid in seen:
                 prev = seen[pid]
                 merged_tags = set(prev.get("source_tags") or []) | set(p.get("source_tags") or [])
-                # prefer the entry with abstract + more metadata
+                # Replace metadata if only the new entry has an abstract >=200 characters.
                 if not (prev.get("abstract") and len(str(prev["abstract"])) >= 200) and \
                    p.get("abstract") and len(str(p["abstract"])) >= 200:
                     prev.update({k: v for k, v in p.items() if v is not None})

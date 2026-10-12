@@ -3,9 +3,9 @@
 in the standard 'Articles' sheet layout: No. / Title / Journal / Year / Web Link(DOI).
 
 Usage:
-  python3 papers_to_excel.py --filtered electro_filtered.json \
-      --out articles.xlsx [--title "Sheet name"] [--top N]
-Requires openpyxl (use .venv/bin/python in the paper-digest dir, or `uv venv`).
+  python3 tools/papers_to_excel.py --filtered data/my_topic_filtered.json \
+      --out data/my_topic_papers.xlsx [--title "Sheet name"] [--top N]
+Requires openpyxl: pip install -r requirements.txt.
 """
 import argparse, json
 from openpyxl import Workbook

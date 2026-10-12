@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Semantic relevance filter: local LLM reads TITLE + ABSTRACT (not tags).
+"""Semantic relevance filter: an LLM reads TITLE + ABSTRACT (not tags).
 
 Batch mode: ~15 papers per call, model returns JSON scores.
-Endpoint: LM Studio OpenAI-compatible API (default http://127.0.0.1:1234/v1).
-Output: filtered.json — kept papers sorted by score desc + rejected list (for audit).
+Endpoint: OpenAI-compatible API (default http://127.0.0.1:1234/v1).
+Output: filtered.json — kept papers sorted by score desc + rejection count/sample.
 """
 import argparse, json, os, re, sys, time
 import urllib.request
@@ -30,7 +30,7 @@ def load_profile(name):
     if not name:
         cfg = load_config()
         dc = cfg["domain_context"]
-        return {"criteria": {"topic": f"{dc['field']} — 通用每日监控",
+        return {"criteria": {"topic": f"{dc['field']} — general daily monitoring",
                              "subfields": dc.get("subfields", []),
                              "notes": dc.get("notes", "")}}
     with open(PROFILES_FILE) as f:
@@ -82,28 +82,30 @@ def parse_json_block(text):
 
 
 def build_prompt(criteria, batch):
-    subfields = "\n".join(f"- {s}" for s in criteria.get("subfields", [])) or "- (未指定子方向，以主题描述为准)"
+    subfields = "\n".join(f"- {s}" for s in criteria.get("subfields", [])) or "- (No subfields specified; use the topic description.)"
     papers_txt = []
     for i, p in enumerate(batch, 1):
         abs_ = (p.get("abstract") or "").strip()
         if len(abs_) > 2500:
-            abs_ = abs_[:2500] + " …[截断]"
+            abs_ = abs_[:2500] + " …[truncated]"
         papers_txt.append(
-            f"[{i}] 期刊/来源: {p['journal']}\n标题: {p['title']}"
-            f"\n摘要: {abs_ if len(abs_) >= 100 else '(无摘要,仅凭标题判断)'}")
+            f"[{i}] Journal/source: {p['journal']}\nTitle: {p['title']}"
+            f"\nAbstract: {abs_ if len(abs_) >= 100 else '(No abstract; judge by the title alone.)'}")
     topic = criteria.get("topic", "")
     notes = criteria.get("notes", "")
     rubric = criteria.get("rubric_hint", "")
     return (
-        "你是该领域的资深审稿人。请对下面每篇论文的【标题+摘要】做语义相关性分析，"
-        "判断其与用户研究主题(见下)的相关程度。不要依赖期刊名或分类标签做主要依据。\n\n"
-        f"=== 用户研究主题 ===\n{topic}\n关注的子方向:\n{subfields}\n"
+        "You are a senior reviewer in this field. Analyze the semantic relevance of "
+        "each paper's TITLE + ABSTRACT to the user's research topic below. "
+        "Do not rely primarily on journal names or category labels.\n\n"
+        f"=== User's research topic ===\n{topic}\nSubfields of interest:\n{subfields}\n"
         f"{notes}\n"
         f"{rubric}\n\n"
-        "=== 待评估论文 ===\n" + "\n\n".join(papers_txt) + "\n\n"
-        "对每篇输出: score(0-10整数, >=6为相关), reason(一句话中文说明判断依据,"
-        "指出标题或摘要中的关键内容), tags(1-3个中文子方向标签)。"
-        '只返回 JSON 数组, 形如 [{"id": <序号>, "score": N, "reason": "...", "tags": ["..."]}, ...]'
+        "=== Papers to evaluate ===\n" + "\n\n".join(papers_txt) + "\n\n"
+        "For each paper, return: score (an integer from 0 to 10; >=6 means relevant), "
+        "reason (one-sentence explanation of the judgment, in Chinese (中文), citing key content "
+        "from the title or abstract), and tags (1-3 Chinese subfield labels). "
+        'Return only a JSON array, e.g. [{"id": <number>, "score": N, "reason": "...", "tags": ["..."]}, ...]'
     )
 
 
@@ -161,7 +163,7 @@ def main():
             if idx not in by_id:
                 p = dict(batch[idx])
                 p["score"] = 0
-                p["reason"] = "(模型未返回该条目)"
+                p["reason"] = "(The model did not return this item.)"
                 p["tags"] = []
                 by_id[idx] = p
         for idx in range(len(batch)):
