@@ -103,8 +103,8 @@ def build_prompt(criteria, batch):
         f"{rubric}\n\n"
         "=== Papers to evaluate ===\n" + "\n\n".join(papers_txt) + "\n\n"
         "For each paper, return: score (an integer from 0 to 10; >=6 means relevant), "
-        "reason (one-sentence explanation of the judgment, in Chinese (中文), citing key content "
-        "from the title or abstract), and tags (1-3 Chinese subfield labels). "
+        "reason (one-sentence explanation of the judgment, in English, citing key content "
+        "from the title or abstract), and tags (1-3 English subfield labels). "
         'Return only a JSON array, e.g. [{"id": <number>, "score": N, "reason": "...", "tags": ["..."]}, ...]'
     )
 

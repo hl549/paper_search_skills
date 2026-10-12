@@ -20,7 +20,7 @@ flowchart TD
 
 3. **Merge/dedupe:** `merge_candidates.py` deterministically merges candidate IDs, using DOI/URL fallbacks and retaining source tags and usable abstracts.
 
-4. **LLM screen:** `filter_papers.py` makes the pipeline's only LLM calls through an OpenAI-compatible API, scoring titles and abstracts against the profile rubric and returning Chinese reasons and tags.
+4. **LLM screen:** `filter_papers.py` makes the pipeline's only LLM calls through an OpenAI-compatible API, scoring titles and abstracts against the profile rubric and returning English reasons and tags.
 
 5. **Excel report:** `papers_to_excel.py` uses `openpyxl` to export the retained papers to a formatted workbook.
 
@@ -37,13 +37,12 @@ cp templates/config.json tools/config.json
 cp templates/profiles.example.json tools/profiles.json
 ```
 
-Edit `my_topic` in `tools/profiles.json`: set the topic, rubric, categories, and keywords; change `journals` to a mapping such as `{"Journal of Fluid Mechanics": ["0022-1120", "1469-468X"]}`. Set the endpoint, model, and key below (empty for a local endpoint); the existing script reads the key through `PAPER_LLM_API_KEY`.
+Edit `my_topic` in `tools/profiles.json`: set the topic, rubric, categories, and keywords; change `journals` to a mapping such as `{"Journal of Fluid Mechanics": ["0022-1120", "1469-468X"]}`. Then set the LLM endpoint (empty key for a local endpoint):
 
 ```bash
 export PAPER_LLM_BASE="http://127.0.0.1:1234/v1"
 export PAPER_LLM_MODEL="qwen3.8-27b"
-export PAPER_LLM_KEY=""
-export PAPER_LLM_API_KEY="$PAPER_LLM_KEY"
+export PAPER_LLM_API_KEY=""    # your key for hosted OpenAI-compatible endpoints
 export PAPER_DIGEST_DIR="$PWD/data"
 cp tools/profiles.json data/profiles.json
 ```

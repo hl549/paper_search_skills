@@ -20,18 +20,12 @@ The user supplies one or more seed papers and a topic description (optional; der
 ```bash
 export PAPER_LLM_BASE="http://127.0.0.1:1234/v1"   # Or https://api.openai.com/v1, https://api.deepseek.com/v1, etc.
 export PAPER_LLM_MODEL="qwen3.8-27b"              # Any model name supported by the endpoint
-export PAPER_LLM_KEY=""                          # Leave empty locally; use sk-... for cloud APIs
+export PAPER_LLM_API_KEY=""                       # Empty locally; your sk-... key for cloud APIs
 ```
 
-The compatibility layer omits Authorization when no key is set, retries cloud HTTP 400 responses without `temperature` (for example, when a GPT-family endpoint rejects that parameter), and strips surrounding JSON code fences from responses.
+The `Authorization` header is only sent when a key is set. If the endpoint rejects `temperature` with HTTP 400 (some GPT-class OpenAI-compatible endpoints), the request is retried without that parameter, and JSON code fences are stripped from model responses before parsing.
 
-**Current-script compatibility:** `filter_papers.py` reads `PAPER_LLM_API_KEY`, not `PAPER_LLM_KEY`. Retain the configuration above and pass the key through explicitly:
-
-```bash
-export PAPER_LLM_API_KEY="$PAPER_LLM_KEY"
-```
-
-`LMSTUDIO_BASE` and `LMSTUDIO_MODEL` remain fallback environment variables when `PAPER_LLM_BASE` or `PAPER_LLM_MODEL` is unset. Screening uses the OpenAI-compatible `/chat/completions` interface directly through `urllib`; there is no SDK dependency. The model must return a JSON array. Reasons and tags intentionally remain in Chinese.
+`LMSTUDIO_BASE` and `LMSTUDIO_MODEL` remain fallback environment variables when `PAPER_LLM_BASE` or `PAPER_LLM_MODEL` is unset. Screening uses the OpenAI-compatible `/chat/completions` interface directly through `urllib`; there is no SDK dependency. The model must return a JSON array. Reasons and tags are returned in English.
 
 ## Six-step pipeline
 
@@ -128,7 +122,7 @@ The original workflow describes `data/<slug>_filtered.json`, filtered using `kee
 python3 tools/filter_papers.py --candidates data/candidates.json --profile my_topic --out data/my_topic_filtered.json
 ```
 
-Output: `data/my_topic_filtered.json`, containing `kept`, `rejected_count`, and a `rejected_sample` of up to 30 papers for auditing. Kept papers are sorted by descending score. The fixed prompt judges titles and abstracts; customize scoring only through `criteria.rubric_hint`. It requests Chinese reasons and 1–3 Chinese subfield tags. The earlier workflow estimated about four seconds per paper; timing depends on the model and endpoint.
+Output: `data/my_topic_filtered.json`, containing `kept`, `rejected_count`, and a `rejected_sample` of up to 30 papers for auditing. Kept papers are sorted by descending score. The fixed prompt judges titles and abstracts; customize scoring only through `criteria.rubric_hint`. It requests English reasons and 1–3 English subfield tags. The earlier workflow estimated about four seconds per paper; timing depends on the model and endpoint.
 
 ### Step 5 — Export Excel
 
